@@ -1,8 +1,11 @@
 import { useState } from 'react';
 
-function Square({ value, onSquareClick }) {
+function Square({ value, onSquareClick, isWinningSquare }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button
+      className={isWinningSquare ? 'square winning-square' : 'square'}
+      onClick={onSquareClick}
+    >
       {value}
     </button>
   );
@@ -22,31 +25,47 @@ function Board({ xIsNext, squares, onPlay }) {
     onPlay(nextSquares);
   }
 
-  const winner = calculateWinner(squares);
+  const result = calculateWinner(squares);
+  const winner = result ? result.winner : null;
+  const winningLine = result ? result.line : [];
+  const isDraw = !winner && squares.every((square) => square !== null);
+
   let status;
   if (winner) {
     status = 'Winner: ' + winner;
+  } else if (isDraw) {
+    status = "Draw!";
   } else {
     status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+  }
+
+  function renderSquare(i) {
+    return (
+      <Square
+        value={squares[i]}
+        onSquareClick={() => handleClick(i)}
+        isWinningSquare={winningLine.includes(i)}
+      />
+    );
   }
 
   return (
     <>
       <div className="status">{status}</div>
       <div className="board-row">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+        {renderSquare(0)}
+        {renderSquare(1)}
+        {renderSquare(2)}
       </div>
       <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+        {renderSquare(3)}
+        {renderSquare(4)}
+        {renderSquare(5)}
       </div>
       <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+        {renderSquare(6)}
+        {renderSquare(7)}
+        {renderSquare(8)}
       </div>
     </>
   );
@@ -108,7 +127,7 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winner: squares[a], line: [a, b, c] };
     }
   }
   return null;
